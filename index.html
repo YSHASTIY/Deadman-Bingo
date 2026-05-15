@@ -117,7 +117,7 @@
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
                 this.masterGain = this.ctx.createGain(); 
                 this.masterGain.connect(this.ctx.destination); 
-                this.masterGain.gain.value = 0.5;
+                this.masterGain.gain.value = 0.25;
                 this.startAmbient();
             },
             
@@ -133,6 +133,7 @@
                 drone.connect(filter); filter.connect(dGain); dGain.connect(this.masterGain);
                 drone.start();
                 this.playHeart();
+                this.startDeepAmbient();
             },
 
             playHeart() {
@@ -144,13 +145,92 @@
                     osc.frequency.setValueAtTime(i === 0 ? 55 : 48, now + delay);
                     osc.frequency.exponentialRampToValueAtTime(0.01, now + delay + 0.4);
                     g.gain.setValueAtTime(0, now + delay);
-                    g.gain.linearRampToValueAtTime(i === 0 ? 0.3 : 0.2, now + delay + 0.05);
+                    g.gain.linearRampToValueAtTime(i === 0 ? 0.55 : 0.38, now + delay + 0.05);
                     g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.4);
                     osc.connect(g); g.connect(this.masterGain);
                     osc.start(now + delay); osc.stop(now + delay + 0.5);
                 });
                 // Цикл сердцебиения с использованием текущего pulseRate
                 setTimeout(() => this.playHeart(), this.pulseRate);
+            },
+
+            startDeepAmbient() {
+                // Слой 1: шум помех — буфер белого шума через узкополосный фильтр
+                const bufferSize = this.ctx.sampleRate * 3;
+                const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noiseSource = this.ctx.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.loop = true;
+
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.value = 300;
+                noiseFilter.Q.value = 0.4;
+
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.value = 0.04;
+
+                noiseSource.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(this.masterGain);
+                noiseSource.start();
+
+                // Медленная модуляция фильтра шума (жуткое дыхание)
+                const lfoNoise = this.ctx.createOscillator();
+                const lfoNoiseGain = this.ctx.createGain();
+                lfoNoise.type = 'sine';
+                lfoNoise.frequency.value = 0.07;
+                lfoNoiseGain.gain.value = 200;
+                lfoNoise.connect(lfoNoiseGain);
+                lfoNoiseGain.connect(noiseFilter.frequency);
+                lfoNoise.start();
+
+                // Слой 2: высокочастотный призвук — тихий шиммер
+                const shimmerOsc = this.ctx.createOscillator();
+                const shimmerGain = this.ctx.createGain();
+                shimmerOsc.type = 'sine';
+                shimmerOsc.frequency.value = 2847;
+                shimmerGain.gain.value = 0.018;
+
+                const lfoShimmer = this.ctx.createOscillator();
+                const lfoShimmerGain = this.ctx.createGain();
+                lfoShimmer.type = 'sine';
+                lfoShimmer.frequency.value = 0.13;
+                lfoShimmerGain.gain.value = 0.015;
+                lfoShimmer.connect(lfoShimmerGain);
+                lfoShimmerGain.connect(shimmerGain.gain);
+                lfoShimmer.start();
+
+                shimmerOsc.connect(shimmerGain);
+                shimmerGain.connect(this.masterGain);
+                shimmerOsc.start();
+
+                // Слой 3: редкие тихие «гудки» терминала
+                this.scheduleTerminalBeep();
+            },
+
+            scheduleTerminalBeep() {
+                const delay = 8000 + Math.random() * 18000; // каждые 8–26 секунд
+                setTimeout(() => {
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 440 + Math.random() * 320;
+                    g.gain.setValueAtTime(0, now);
+                    g.gain.linearRampToValueAtTime(0.035, now + 0.08);
+                    g.gain.setValueAtTime(0.035, now + 0.18);
+                    g.gain.linearRampToValueAtTime(0, now + 0.35);
+                    osc.connect(g);
+                    g.connect(this.masterGain);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                    this.scheduleTerminalBeep();
+                }, delay);
             },
 
             updatePulse(occupancy) {
