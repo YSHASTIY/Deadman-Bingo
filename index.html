@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID TERMINAL | AMBIENT PROTOCOL</title>
+    <title>VOID TERMINAL | DYNAMIC SOUND</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -84,45 +84,66 @@
     <script>
         const TerminalAudio = {
             ctx: null,
-            ambientStarted: false,
+            mainOsc: null,
+            baseFreq: 40,
             init() {
                 if (this.ctx) return;
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.startAmbient();
+                this.startEngine();
             },
-            startAmbient() {
-                if (this.ambientStarted) return;
-                this.ambientStarted = true;
-                
-                const masterGain = this.ctx.createGain();
-                masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-                masterGain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 3); // Плавное появление
-                
-                const createLayer = (freq, type, detune) => {
-                    const osc = this.ctx.createOscillator();
-                    const filter = this.ctx.createBiquadFilter();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    osc.detune.setValueAtTime(detune, this.ctx.currentTime);
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(150, this.ctx.currentTime);
-                    osc.connect(filter);
-                    filter.connect(masterGain);
-                    osc.start();
-                };
+            startEngine() {
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                this.masterGain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 2);
 
-                createLayer(40, 'sine', 0);   // Глубокий низ
-                createLayer(42, 'sine', 5);   // Биение частот
-                createLayer(60, 'sawtooth', -10); // Металлический оттенок
+                // Основной гул
+                this.mainOsc = this.ctx.createOscillator();
+                this.mainOsc.type = 'sine';
+                this.mainOsc.frequency.setValueAtTime(this.baseFreq, this.ctx.currentTime);
                 
-                masterGain.connect(this.ctx.destination);
+                // LFO для "дыхания"
+                const lfo = this.ctx.createOscillator();
+                const lfoGain = this.ctx.createGain();
+                lfo.frequency.setValueAtTime(0.2, this.ctx.currentTime); // Очень медленно
+                lfoGain.gain.setValueAtTime(5, this.ctx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(this.mainOsc.frequency);
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(120, this.ctx.currentTime);
+
+                this.mainOsc.connect(filter);
+                filter.connect(this.masterGain);
+                this.masterGain.connect(this.ctx.destination);
+                
+                this.mainOsc.start();
+                lfo.start();
+            },
+            // Изменение тона системы при взаимодействии
+            shiftSystem() {
+                this.init();
+                const newFreq = this.baseFreq + (Math.random() * 10 - 5);
+                this.mainOsc.frequency.exponentialRampToValueAtTime(newFreq, this.ctx.currentTime + 0.5);
+                
+                // Случайный цифровой "писк"
+                if(Math.random() > 0.6) {
+                    const beep = this.ctx.createOscillator();
+                    const bGain = this.ctx.createGain();
+                    beep.type = 'sine';
+                    beep.frequency.setValueAtTime(800 + Math.random() * 2000, this.ctx.currentTime);
+                    bGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                    bGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                    beep.connect(bGain); bGain.connect(this.ctx.destination);
+                    beep.start(); beep.stop(this.ctx.currentTime + 0.1);
+                }
             },
             playClick() {
-                this.init();
+                this.shiftSystem();
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.1);
                 gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
                 gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
@@ -130,29 +151,31 @@
                 osc.start(); osc.stop(this.ctx.currentTime + 0.1);
             },
             playStatic() {
-                this.init();
-                const bufferSize = this.ctx.sampleRate * 0.3;
+                this.shiftSystem();
+                const bufferSize = this.ctx.sampleRate * 0.4;
                 const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
                 const noise = this.ctx.createBufferSource();
                 noise.buffer = buffer;
                 const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
                 noise.connect(gain); gain.connect(this.ctx.destination);
                 noise.start();
             },
             playDeath() {
                 this.init();
+                this.masterGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1);
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(20, this.ctx.currentTime + 2);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 2);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(60, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1, this.ctx.currentTime + 3);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 3);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 2);
+                osc.start(); osc.stop(this.ctx.currentTime + 3);
             }
         };
 
