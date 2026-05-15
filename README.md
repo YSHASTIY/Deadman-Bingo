@@ -1,6 +1,6 @@
 # 📟 VOID TERMINAL
 
-<img width="1080" height="45" alt="gemini-svg" src="https://github.com/user-attachments/assets/3b7bd873-ec63-4449-90dc-aa76df071d16" />
+<img width="1080" height="90" alt="gemini-svg" src="https://github.com/user-attachments/assets/3b7bd873-ec63-4449-90dc-aa76df071d16" />
 
 <p align="center">
   <strong>Вторая сторона — не человек. Система не знает сострадания.</strong>
