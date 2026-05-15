@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID TERMINAL | DYNAMIC SOUND</title>
+    <title>VOID TERMINAL | MULTI-LAYER SOUND</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -36,7 +36,7 @@
         #endScreen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     </style>
 </head>
-<body>
+<body onclick="TerminalAudio.init()">
 
     <div class="crt-overlay"></div>
     <div class="scanline"></div>
@@ -84,98 +84,99 @@
     <script>
         const TerminalAudio = {
             ctx: null,
-            mainOsc: null,
-            baseFreq: 40,
+            masterGain: null,
+            ambientStarted: false,
             init() {
                 if (this.ctx) return;
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.startEngine();
-            },
-            startEngine() {
                 this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
-                this.masterGain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 2);
-
-                // Основной гул
-                this.mainOsc = this.ctx.createOscillator();
-                this.mainOsc.type = 'sine';
-                this.mainOsc.frequency.setValueAtTime(this.baseFreq, this.ctx.currentTime);
-                
-                // LFO для "дыхания"
-                const lfo = this.ctx.createOscillator();
-                const lfoGain = this.ctx.createGain();
-                lfo.frequency.setValueAtTime(0.2, this.ctx.currentTime); // Очень медленно
-                lfoGain.gain.setValueAtTime(5, this.ctx.currentTime);
-                lfo.connect(lfoGain);
-                lfoGain.connect(this.mainOsc.frequency);
-                
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(120, this.ctx.currentTime);
-
-                this.mainOsc.connect(filter);
-                filter.connect(this.masterGain);
                 this.masterGain.connect(this.ctx.destination);
-                
-                this.mainOsc.start();
-                lfo.start();
+                this.startAmbient();
             },
-            // Изменение тона системы при взаимодействии
-            shiftSystem() {
-                this.init();
-                const newFreq = this.baseFreq + (Math.random() * 10 - 5);
-                this.mainOsc.frequency.exponentialRampToValueAtTime(newFreq, this.ctx.currentTime + 0.5);
+            // Глубокий пульсирующий фон
+            startAmbient() {
+                if (this.ambientStarted) return;
+                this.ambientStarted = true;
                 
-                // Случайный цифровой "писк"
-                if(Math.random() > 0.6) {
-                    const beep = this.ctx.createOscillator();
-                    const bGain = this.ctx.createGain();
-                    beep.type = 'sine';
-                    beep.frequency.setValueAtTime(800 + Math.random() * 2000, this.ctx.currentTime);
-                    bGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-                    bGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-                    beep.connect(bGain); bGain.connect(this.ctx.destination);
-                    beep.start(); beep.stop(this.ctx.currentTime + 0.1);
-                }
+                const createOsc = (f, vol) => {
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    const lfo = this.ctx.createOscillator();
+                    const lfoG = this.ctx.createGain();
+                    
+                    osc.frequency.value = f;
+                    lfo.frequency.value = 0.1 + Math.random() * 0.2;
+                    lfoG.gain.value = 0.02;
+                    
+                    lfo.connect(lfoG);
+                    lfoG.connect(g.gain);
+                    osc.connect(g);
+                    g.connect(this.masterGain);
+                    
+                    g.gain.value = vol;
+                    osc.start(); lfo.start();
+                };
+
+                createOsc(55, 0.05); // Низкий гул
+                createOsc(110, 0.02); // Гармоника
             },
+            // Динамический звук кнопки (каждый раз разный)
             playClick() {
-                this.shiftSystem();
+                this.init();
+                const frequencies = [200, 300, 450, 600, 850];
+                const f = frequencies[Math.floor(Math.random() * frequencies.length)];
+                
                 const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-                osc.connect(gain); gain.connect(this.ctx.destination);
+                const g = this.ctx.createGain();
+                osc.type = Math.random() > 0.5 ? 'square' : 'triangle';
+                osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(f/2, this.ctx.currentTime + 0.1);
+                
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+                
+                osc.connect(g); g.connect(this.masterGain);
                 osc.start(); osc.stop(this.ctx.currentTime + 0.1);
             },
+            // Звук "Записи данных" для клеток
+            playDataBurst() {
+                this.init();
+                for(let i=0; i<5; i++) {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const g = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.value = 2000 + Math.random() * 3000;
+                        g.gain.setValueAtTime(0.02, this.ctx.currentTime);
+                        g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.02);
+                        osc.connect(g); g.connect(this.masterGain);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.02);
+                    }, i * 30);
+                }
+            },
             playStatic() {
-                this.shiftSystem();
-                const bufferSize = this.ctx.sampleRate * 0.4;
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                const noise = this.ctx.createBufferSource();
-                noise.buffer = buffer;
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
-                noise.connect(gain); gain.connect(this.ctx.destination);
-                noise.start();
+                this.init();
+                const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.4, this.ctx.sampleRate);
+                const data = buf.getChannelData(0);
+                for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+                const src = this.ctx.createBufferSource();
+                src.buffer = buf;
+                const g = this.ctx.createGain();
+                g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+                src.connect(g); g.connect(this.masterGain);
+                src.start();
             },
             playDeath() {
                 this.init();
-                this.masterGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1);
                 const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(60, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(1, this.ctx.currentTime + 3);
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 3);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 3);
+                const g = this.ctx.createGain();
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(10, this.ctx.currentTime + 2.5);
+                g.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 2.5);
+                osc.connect(g); g.connect(this.masterGain);
+                osc.start(); osc.stop(this.ctx.currentTime + 2.5);
             }
         };
 
@@ -194,16 +195,8 @@
         let gId = "", pNum = 0, gState = null, lang = 'ru', isBotMode = false;
 
         const TEXTS = {
-            ru: { 
-                single: "ОДИНОЧНЫЙ СЕАНС", create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ", back:"НАЗАД", roll:"КУРОК", wait:"ОЖИДАНИЕ СУБЪЕКТА...", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", 
-                botTurn: "ТЕРМИНАЛ ДУМАЕТ...", winT:"ВЫЖИЛ", winM:"Система не смогла вас сломить. Объект стабилен.", loseT:"СТЕРТ", loseM:"Интеллект превзошел плоть. Утилизация завершена.",
-                instr: "1. Жми КУРОК.<br>2. Цифра — твоя колонка.<br>3. Займи клетку в ней.<br>4. 6 — любая клетка." 
-            },
-            en: { 
-                single: "SINGLE SESSION", create:"CREATE LOBBY", join:"CONNECT", start:"ENTER", back:"BACK", roll:"TRIGGER", wait:"AWAITING...", your:"YOUR TURN", enemy:"ENEMY AIMING...", 
-                botTurn: "TERMINAL THINKING...", winT:"STABLE", winM:"The system failed to break you. Subject stable.", loseT:"ERASED", loseM:"Intelligence surpassed flesh. Disposal complete.",
-                instr: "1. Pull TRIGGER.<br>2. Number is your column.<br>3. Occupy cell there.<br>4. 6 is free choice." 
-            }
+            ru: { single: "ОДИНОЧНЫЙ СЕАНС", create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ", back:"НАЗАД", roll:"КУРОК", wait:"ОЖИДАНИЕ СУБЪЕКТА...", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", botTurn: "ТЕРМИНАЛ ДУМАЕТ...", winT:"ВЫЖИЛ", winM:"Система стабильна.", loseT:"СТЕРТ", loseM:"Утилизация завершена.", instr: "1. Жми КУРОК.<br>2. Цифра — колонка.<br>3. 6 — любая клетка." },
+            en: { single: "SINGLE SESSION", create:"CREATE LOBBY", join:"CONNECT", start:"ENTER", back:"BACK", roll:"TRIGGER", wait:"AWAITING...", your:"YOUR TURN", enemy:"ENEMY AIMING...", botTurn: "TERMINAL THINKING...", winT:"STABLE", winM:"Subject stable.", loseT:"ERASED", loseM:"Disposal complete.", instr: "1. Pull TRIGGER.<br>2. Num is column.<br>3. 6 is free choice." }
         };
 
         const WORDS = ["БОЛЬ", "УЖАС", "ТЛЕН", "МОРГ", "ЯД", "БРЕД", "АГОНИЯ", "МРАК", "СТРАХ", "ПЫТКИ", "КРОВЬ", "КРИК", "ТЬМА", "ХАОС", "ГНИЛЬ", "СМЕРТЬ", "ПУСТОТА", "БЕЗДНА", "ШРАМ", "ГРЕХ", "ПЕТЛЯ", "ЗЛО", "РОК", "ГРОБ", "ТЕНЬ"];
@@ -217,6 +210,7 @@
         }
 
         function switchScreen(s) {
+            TerminalAudio.playClick();
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(s).classList.add('active');
         }
@@ -228,7 +222,6 @@
             gState.board[12] = 3;
             switchScreen('scrGame');
             document.getElementById('displayId').innerText = "MODE: AI_CHALLENGE";
-            document.getElementById('tInstr').innerHTML = TEXTS[lang].instr;
             drawGrid(); updateUI();
         }
 
@@ -252,14 +245,13 @@
                 if(s.exists()){
                     db.ref('games/' + gId).update({ players: 2 });
                     listen();
-                } else { alert("VOID"); }
+                } else { TerminalAudio.playDeath(); }
             });
         }
 
         function listen() {
             switchScreen('scrGame');
             document.getElementById('displayId').innerText = "SESSION: " + gId;
-            document.getElementById('tInstr').innerHTML = TEXTS[lang].instr;
             db.ref('games/' + gId).on('value', s => {
                 gState = s.val();
                 if(!gState) return;
@@ -299,7 +291,7 @@
             const col = i % 5;
             if(gState.roll !== 6 && col !== (gState.roll - 1)) return;
 
-            TerminalAudio.playClick();
+            TerminalAudio.playDataBurst();
             gState.board[i] = pNum;
             gState.turn = isBotMode ? 2 : (pNum === 1 ? 2 : 1);
             gState.roll = 0;
@@ -313,14 +305,12 @@
             if(!isBotMode || gState.turn !== 2 || gState.winner) return;
             const r = Math.floor(Math.random() * 6) + 1;
             gState.roll = r;
-            let possibleMoves = [];
-            gState.board.forEach((v, idx) => {
-                if(v === 0 && (r === 6 || (idx % 5 === r - 1))) possibleMoves.push(idx);
-            });
-            if(possibleMoves.length > 0) {
-                const choice = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            let moves = [];
+            gState.board.forEach((v, idx) => { if(v === 0 && (r === 6 || (idx % 5 === r - 1))) moves.push(idx); });
+            if(moves.length > 0) {
+                const choice = moves[Math.floor(Math.random() * moves.length)];
                 gState.board[choice] = 2;
-                TerminalAudio.playClick();
+                TerminalAudio.playDataBurst();
             }
             gState.turn = 1; gState.roll = 0;
             gState.winner = checkWin(gState.board) ? 2 : 0;
@@ -347,13 +337,11 @@
 
         function showEnd(isWin) {
             if (!isWin) TerminalAudio.playDeath();
-            else TerminalAudio.playClick();
-            const es = document.getElementById('endScreen');
-            const title = document.getElementById('endTitle');
-            title.innerText = isWin ? TEXTS[lang].winT : TEXTS[lang].loseT;
-            title.style.color = isWin ? "#0af" : "#f00";
+            else TerminalAudio.playDataBurst();
+            document.getElementById('endTitle').innerText = isWin ? TEXTS[lang].winT : TEXTS[lang].loseT;
+            document.getElementById('endTitle').style.color = isWin ? "#0af" : "#f00";
             document.getElementById('endMsg').innerText = isWin ? TEXTS[lang].winM : TEXTS[lang].loseM;
-            es.style.display = 'flex';
+            document.getElementById('endScreen').style.display = 'flex';
             if(!isBotMode) db.ref('games/' + gId).remove();
         }
     </script>
