@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID TERMINAL | IDENTITY</title>
+    <title>VOID TERMINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -85,8 +85,13 @@
                 </div>
                 <div id="displayOpponent" style="color: #666; font-size: 11px; margin-top: 5px;">AWAITING...</div>
                 <hr style="border:0; border-top:1px solid #311; margin: 10px 0;">
-                <b id="tProt" style="color:var(--blood)">ИНСТРУКЦИИ:</b>
-                <div id="tInstr" style="color:#666; margin-top:8px; line-height:1.4; font-size:11px;"></div>
+                <b id="tProt" style="color:var(--blood)">ПРОТОКОЛ:</b>
+                <div id="tInstr" style="color:#888; margin-top:8px; line-height:1.6; font-size:11px;">
+                    1. Нажми КУРОК для выбора колонки.<br>
+                    2. Выбери клетку в подсвеченном ряду.<br>
+                    3. Число 6 — свободный выбор любой клетки.<br>
+                    4. Собери линию из 5 слов для победы.
+                </div>
             </div>
             <div style="display:flex; flex-direction:column; align-items:center;">
                 <div id="gameStatus" style="color: #f00; margin-bottom: 10px; font-family:'Special Elite'; height: 20px;"></div>
@@ -121,12 +126,18 @@
 
         let gId = "", pNum = 1, gState = null, lang = 'ru', isBotMode = false, sessionWords = [], myNick = localStorage.getItem('void_nick') || "";
         const TEXTS = {
-            ru: { list: "СПИСОК ЛОББИ", single: "ОДИНОЧНЫЙ СЕАНС", create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ", back:"НАЗАД", roll:"КУРОК", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", botTurn: "ТЕРМИНАЛ ДУМАЕТ...", winT:"ВЫЖИЛ", winM:"Система стабильна.", loseT:"СТЕРТ", loseM:"Утилизация завершена.", instr: "1. Жми КУРОК.<br>2. Цифра — колонка.<br>3. 6 — любая клетка." },
-            en: { list: "LOBBY LIST", single: "SINGLE SESSION", create:"CREATE LOBBY", join:"CONNECT", start:"ENTER", back:"BACK", roll:"TRIGGER", your:"YOUR TURN", enemy:"ENEMY AIMING...", botTurn: "TERMINAL THINKING...", winT:"STABLE", winM:"Subject stable.", loseT:"ERASED", loseM:"Disposal complete.", instr: "1. Pull TRIGGER.<br>2. Num is column.<br>3. 6 is free choice." }
+            ru: { protocol: "ПРОТОКОЛ:", list: "СПИСОК ЛОББИ", single: "ОДИНОЧНЫЙ СЕАНС", create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ", back:"НАЗАД", roll:"КУРОК", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", botTurn: "ТЕРМИНАЛ ДУМАЕТ...", winT:"ВЫЖИЛ", winM:"Система стабильна.", loseT:"СТЕРТ", loseM:"Утилизация завершена.", instr: "1. Нажми КУРОК для выбора колонки.<br>2. Выбери клетку в подсвеченном ряду.<br>3. Число 6 — свободный выбор любой клетки.<br>4. Собери линию из 5 слов для победы." },
+            en: { protocol: "PROTOCOL:", list: "LOBBY LIST", single: "SINGLE SESSION", create:"CREATE LOBBY", join:"CONNECT", start:"ENTER", back:"BACK", roll:"TRIGGER", your:"YOUR TURN", enemy:"ENEMY AIMING...", botTurn: "TERMINAL THINKING...", winT:"STABLE", winM:"Subject stable.", loseT:"ERASED", loseM:"Disposal complete.", instr: "1. Pull TRIGGER to roll a column.<br>2. Pick a cell in the highlighted column.<br>3. Roll 6 for a free choice anywhere.<br>4. Form a line of 5 words to win." }
         };
 
         function switchScreen(s) { document.querySelectorAll('.screen').forEach(el => el.classList.remove('active')); document.getElementById(s).classList.add('active'); }
-        function toggleLanguage() { lang = lang === 'ru' ? 'en' : 'ru'; document.querySelectorAll('[data-t]').forEach(el => el.innerHTML = TEXTS[lang][el.getAttribute('data-t')] || el.innerText); document.getElementById('tInstr').innerHTML = TEXTS[lang].instr; if(gState) updateUI(); }
+        function toggleLanguage() { 
+            lang = lang === 'ru' ? 'en' : 'ru'; 
+            document.querySelectorAll('[data-t]').forEach(el => el.innerHTML = TEXTS[lang][el.getAttribute('data-t')] || el.innerText); 
+            document.getElementById('tProt').innerText = TEXTS[lang].protocol;
+            document.getElementById('tInstr').innerHTML = TEXTS[lang].instr; 
+            if(gState) updateUI(); 
+        }
         function copyId() { navigator.clipboard.writeText(gId); const chip = document.getElementById('copyBtn'); chip.innerText = "DONE"; setTimeout(() => chip.innerText = "COPY", 1000); }
 
         function openNickPrompt(mode) {
@@ -160,22 +171,19 @@
             });
         }
 
-        function openNickPromptWithId(id) {
-            document.getElementById('joinInput').value = id;
-            openNickPrompt('JOIN');
-        }
+        function openNickPromptWithId(id) { document.getElementById('joinInput').value = id; openNickPrompt('JOIN'); }
 
         function startSinglePlayer() {
             isBotMode = true; pNum = 1; gId = "OFFLINE"; sessionWords = [...MASTER_WORDS].sort(() => 0.5 - Math.random()).slice(0, 25);
             gState = { board: Array(25).fill(0), turn: 1, roll: 0, players: 2, winner: 0, words: sessionWords, p1Nick: "YOU", p2Nick: "BOT" };
-            gState.board[12] = 3; switchScreen('scrGame'); drawGrid(); updateUI();
+            gState.board[12] = 0; switchScreen('scrGame'); drawGrid(); updateUI();
             document.getElementById('copyBtn').style.display = 'none';
         }
 
         function startHost() {
             isBotMode = false; gId = Math.random().toString(36).substring(2, 7).toUpperCase(); pNum = 1; sessionWords = [...MASTER_WORDS].sort(() => 0.5 - Math.random()).slice(0, 25);
             const data = { board: Array(25).fill(0), turn: 1, roll: 0, players: 1, winner: 0, words: sessionWords, p1Nick: myNick, p2Nick: "" };
-            data.board[12] = 3; db.ref('games/' + gId).set(data).then(() => { listen(); });
+            db.ref('games/' + gId).set(data).then(() => { listen(); });
             document.getElementById('copyBtn').style.display = 'block';
         }
 
@@ -239,6 +247,13 @@
             gState.board.forEach((v, i) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell' + (v===1?' p1':v===2?' p2':'');
+                // Подсветка доступных клеток
+                if (gState.turn === pNum && gState.roll !== 0 && v === 0) {
+                    if (gState.roll === 6 || (i % 5 === gState.roll - 1)) {
+                        cell.style.borderColor = '#fff';
+                        cell.style.boxShadow = 'inset 0 0 5px rgba(255,255,255,0.2)';
+                    }
+                }
                 cell.innerText = v === 3 ? "SYSTEM" : sessionWords[i];
                 cell.onclick = () => occupy(i); g.appendChild(cell);
             });
