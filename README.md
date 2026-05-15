@@ -1,4 +1,4 @@
-# 📟 VOID TERMINAL 666
+# 📟 VOID TERMINAL
 
 <img width="1080" height="45" alt="gemini-svg" src="https://github.com/user-attachments/assets/3b7bd873-ec63-4449-90dc-aa76df071d16" />
 
