@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID TERMINAL | ULTIMATE FIX</title>
+    <title>VOID TERMINAL | TRUE FINAL FIX</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -25,7 +26,6 @@
         .btn { font-family: 'Bebas Neue'; font-size: 22px; background: #1a0000; border: 2px solid var(--blood); color: var(--blood); padding: 10px; width: 100%; max-width: 300px; margin: 5px; transition: 0.2s; letter-spacing: 2px; z-index: 20; outline: none; }
         .btn:hover:not(:disabled) { background: var(--blood); color: #fff; box-shadow: 0 0 30px var(--blood); }
         
-        /* Синяя кнопка для одиночной игры */
         .btn.blue { border-color: var(--neon); color: var(--neon); background: #000a1a; }
         .btn.blue:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
         
@@ -115,7 +115,7 @@
     </div>
 
     <script>
-        const MASTER_WORDS_RU = ["Гниль", "Трепанация", "Метастаз", "Некроз", "Судороги", "Асфиксия", "Распад", "Паразит", "Инъекция", "Токсин", "Гангрена", "Плесень", "Опухоль", "Личинка", "Пытка", "Ампутация", "Рвота", "Шрам", "Гной", "Труп", "Кома", "Фантом", "Перелом", "Вирус", "Спазм", "Безумие", "Кадавр", "Слизь", "Мутация", "Агония", "Слепота", "Удушье", "Сепсис", "Амнезия", "Психоз", "Фобия", "Каннибал", "Морг", "Петля", "Бездна", "Пустота", "Эрозия", "Травма", "Шизофрения", "Паралич", "Невроз", "Кошмар", "Паника", "Тремор", "Обморок", "Заражение", "Тлен", "Ожог", "Галлюцинация", "Стигматы", "Ритуал", "Жертва", "Алтарь", "Проклятие", "Демон", "Мрак", "Тень", "Одержимость", "Шепот", "Скрежет", "Вопль", "Смерть", "Погребение", "Могила", "Склеп", "Саван", "Пепел", "Ужас", "Страх", "Боль", "Отчаяние", "Гнев", "Порок", "Грех", "Вина", "Палач", "Тиски", "Игла", "Скальпель", "Пила", "Крюк", "Цепь", "Клетка", "Подвал", "Чердак", "Лабиринт", "Зеркало", "Маска", "Лицо", "Глаза", "Зубы", "Когти", "Кость", "Кровь", "Плоть", "Кожа", "Волосы", "Нерв", "Мозг", "Сердце", "Легкие", "Почка", "Печень", "Желудок", "Кишечник", "Язва", "Нарыв", "Свищ", "Грыжа", "Отек", "Тромб", "Инфаркт", "Инсульт", "Рак", "Диагноз", "Рецидив", "Клиника", "Палата", "Изолятор", "Смирительная", "Лоботомия", "Электрошок", "Препарат", "Доза", "Яд", "Ртуть", "Кислота", "Щелочь", "Радиация", "Изотоп", "Мутант", "Гибрид", "Клон", "Орган", "Донор", "Трансплантат", "Имплант", "Протез", "Сенсор", "Чип", "Провод", "Ток", "Разряд", "Импульс", "Сигнал", "Шум", "Помеха", "Глюк", "Ошибка", "Сбой", "Отказ", "Крах", "Коллапс", "Взрыв", "Пламя", "Дым", "Газ", "Пыль", "Грязь", "Мусор", "Отходы", "Стоки", "Канализация", "Крыса", "Насекомое", "Паук", "Клещ", "Червь", "Пиявка", "Оса", "Рой", "Улей", "Гнездо", "Нора", "Ловушка", "Капкан", "Петля", "Узел", "Верёвка", "Нож", "Бритва", "Шило", "Топор", "Молот", "Гвоздь"];
+        const MASTER_WORDS_RU = ["Гниль", "Трепанация", "Метастаз", "Некроз", "Судороги", "Асфиксия", "Распад", "Паразит", "Инъекция", "Токсин", "Гангрена", "Плесень", "Опухоль", "Личинка", "Пытка", "Ампутация", "Рвота", "Шрам", "Гной", "Труп", "Кома", "Фантом", "Перелом", "Вирус", "Спазм", "Безумие", "Кадавр", "Слизь", "Мутация", "Агония", "Слепота", "Удушье", "Сепсис", "Амнезия", "Психоз", "Фобия", "Каннибал", "Морг", "Петля", "Бездна", "Пустота", "Эрозия", "Травма", "Шизофрения", "Паралич", "Невроз", "Кошмар", "Паника", "Tremor", "Обморок", "Заражение", "Тлен", "Ожог", "Галлюцинация", "Стигматы", "Ритуал", "Жертва", "Алтарь", "Проклятие", "Демон", "Мрак", "Тень", "Одержимость", "Шепот", "Скрежет", "Вопль", "Смерть", "Погребение", "Могила", "Склеп", "Саван", "Пепел", "Ужас", "Страх", "Pain", "Отчаяние", "Гнев", "Порок", "Грех", "Вина", "Палач", "Тиски", "Игла", "Скальпель", "Пила", "Крюк", "Цепь", "Клетка", "Подвал", "Чердак", "Лабиринт", "Зеркало", "Маска", "Лицо", "Глаза", "Зубы", "Когти", "Кость", "Кровь", "Плоть", "Кожа", "Волосы", "Нерв", "Мозг", "Сердце", "Легкие", "Почка", "Печень", "Желудок", "Кишечник", "Язва", "Нарыв", "Свищ", "Грыжа", "Отек", "Тромб", "Инфаркт", "Инсульт", "Рак", "Диагноз", "Рецидив", "Клиника", "Палата", "Изолятор", "Смирительная", "Лоботомия", "Электрошок", "Препарат", "Доза", "Яд", "Ртуть", "Кислота", "Щелочь", "Радиация", "Изотоп", "Мутант", "Гибрид", "Клон", "Орган", "Донор", "Трансплантат", "Имплант", "Протез", "Сенсор", "Чип", "Провод", "Ток", "Разряд", "Импульс", "Сигнал", "Шум", "Помеха", "Глюк", "Ошибка", "Сбой", "Отказ", "Крах", "Коллапс", "Взрыв", "Пламя", "Дым", "Газ", "Пыль", "Грязь", "Мусор", "Отходы", "Стоки", "Канализация", "Крыса", "Насекомое", "Паук", "Клещ", "Червь", "Пиявка", "Оса", "Рой", "Улей", "Гнездо", "Нора", "Ловушка", "Капкан", "Петля", "Узел", "Верёвка", "Нож", "Бритва", "Шило", "Топор", "Молот", "Гвоздь"];
         const MASTER_WORDS_EN = ["Rot", "Trepanation", "Metastasis", "Necrosis", "Seizure", "Asphyxia", "Decay", "Parasite", "Injection", "Toxin", "Gangrene", "Mold", "Tumor", "Larva", "Torture", "Amputation", "Vomit", "Scar", "Pus", "Corpse", "Coma", "Phantom", "Fracture", "Virus", "Spasm", "Madness", "Cadaver", "Slime", "Mutation", "Agony", "Blindness", "Suffocation", "Sepsis", "Amnesia", "Psychosis", "Phobia", "Cannibal", "Morgue", "Noose", "Abyss", "Void", "Erosion", "Trauma", "Schizophrenia", "Paralysis", "Neurosis", "Nightmare", "Panic", "Tremor", "Fainting", "Infection", "Blight", "Burn", "Hallucination", "Stigmata", "Ritual", "Sacrifice", "Altar", "Curse", "Demon", "Gloom", "Shadow", "Possession", "Whisper", "Grind", "Scream", "Death", "Burial", "Grave", "Crypt", "Shroud", "Ash", "Horror", "Fear", "Pain", "Despair", "Wrath", "Vice", "Sin", "Guilt", "Hangman", "Vise", "Needle", "Scalpel", "Saw", "Hook", "Chain", "Cage", "Cellar", "Attic", "Maze", "Mirror", "Mask", "Face", "Eyes", "Teeth", "Claws", "Bone", "Blood", "Flesh", "Skin", "Hair", "Nerve", "Brain", "Heart", "Lungs", "Kidney", "Liver", "Stomach", "Intestine", "Ulcer", "Abscess", "Fistula", "Hernia", "Edema", "Thrombus", "Infarction", "Stroke", "Cancer", "Diagnosis", "Relapse", "Clinic", "Ward", "Isolator", "Straitjacket", "Lobotomy", "Electroshock", "Drug", "Dose", "Poison", "Mercury", "Acid", "Alkali", "Radiation", "Isotope", "Mutant", "Hybrid", "Clone", "Organ", "Donor", "Transplant", "Implant", "Prosthesis", "Sensor", "Chip", "Wire", "Current", "Discharge", "Impulse", "Signal", "Noise", "Glitch", "Error", "Fault", "Crash", "Collapse", "Explosion", "Flame", "Smoke", "Gas", "Dust", "Dirt", "Waste", "Sewage", "Rat", "Insect", "Spider", "Tick", "Worm", "Leech", "Wasp", "Swarm", "Hive", "Nest", "Burrow", "Trap", "Snare", "Knot", "Rope", "Knife", "Razor", "Awl", "Axe", "Hammer", "Nail"];
 
         const TerminalAudio = {
@@ -390,10 +390,11 @@
             const count = gState.board.filter(v => v !== 0).length;
             TerminalAudio.updatePulse(count);
 
-            if(checkWin(gState.board)) {
-                gState.winner = pNum;
+            const resWin = checkWin(gState.board);
+            if(resWin !== 0) {
+                gState.winner = resWin;
                 drawGrid(); updateUI();
-                showEnd(true);
+                showEnd(gState.winner === pNum);
                 if(!isBotMode) db.ref('games/' + gId).update(gState);
                 return;
             }
@@ -416,8 +417,8 @@
                 let best = moves[0]; let maxS = -1;
                 moves.forEach(m => {
                     let s = 0;
-                    let bW = [...gState.board]; bW[m] = 2; if(checkWin(bW)) s += 100;
-                    let bB = [...gState.board]; bB[m] = 1; if(checkWin(bB)) s += 50;
+                    let bW = [...gState.board]; bW[m] = 2; if(checkWin(bW) === 2) s += 100;
+                    let bB = [...gState.board]; bB[m] = 1; if(checkWin(bB) === 1) s += 50;
                     if(s > maxS) { maxS = s; best = m; }
                 });
                 gState.board[best] = 2; TerminalAudio.playDataBurst();
@@ -426,11 +427,12 @@
             const count = gState.board.filter(v => v !== 0).length;
             TerminalAudio.updatePulse(count);
 
-            if(checkWin(gState.board)) {
-                gState.winner = 2;
+            const resWin = checkWin(gState.board);
+            if(resWin !== 0) {
+                gState.winner = resWin;
                 gState.roll = 0;
                 drawGrid(); updateUI();
-                showEnd(false);
+                showEnd(gState.winner === pNum);
                 return;
             }
             
@@ -452,9 +454,9 @@
                         return b[idx] === player || b[idx] === 3;
                     });
                 });
-                if (hasWin) return true;
+                if (hasWin) return player;
             }
-            return false;
+            return 0;
         }
 
         function drawGrid() {
