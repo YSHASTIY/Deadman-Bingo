@@ -12,7 +12,6 @@
         * { box-sizing: border-box; cursor: crosshair; user-select: none; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; background: var(--dark); color: #b0a090; font-family: 'Share Tech Mono', monospace; height: 100%; overflow: hidden; transition: transform 0.4s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.4s; }
         
-        /* Эффект выключения ТВ */
         .tv-off { transform: scaleY(0.005) scaleX(1.3); opacity: 0; }
 
         .crt-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), radial-gradient(circle, transparent 40%, black 150%); background-size: 100% 4px, 100% 100%; }
@@ -111,17 +110,19 @@
     </div>
 
     <script>
+        // --- КОНСТАНТЫ СЛОВ ---
         const MASTER_WORDS_RU = ["Гниль", "Трепанация", "Метастаз", "Некроз", "Судороги", "Асфиксия", "Распад", "Паразит", "Инъекция", "Токсин", "Гангрена", "Плесень", "Опухоль", "Личинка", "Пытка", "Ампутация", "Рвота", "Шрам", "Гной", "Труп", "Кома", "Фантом", "Перелом", "Вирус", "Спазм", "Безумие", "Кадавр", "Слизь", "Мутация", "Агония", "Слепота", "Удушье", "Сепсис", "Амнезия", "Психоз", "Фобия", "Каннибал", "Морг", "Петля", "Бездна", "Пустота", "Эрозия", "Травма", "Шизофрения", "Паралич", "Невроз", "Кошмар", "Паника", "Тремор", "Обморок", "Заражение", "Тлен", "Ожог", "Галлюцинация", "Стигматы", "Ритуал", "Жертва", "Алтарь", "Проклятие", "Демон", "Мрак", "Тень", "Одержимость", "Шепот", "Скрежет", "Вопль", "Смерть", "Погребение", "Могила", "Склеп", "Саван", "Пепел", "Ужас", "Страх", "Боль", "Отчаяние", "Гнев", "Порок", "Грех", "Вина", "Палач", "Тиски", "Игла", "Скальпель", "Пила", "Крюк", "Цепь", "Клетка", "Подвал", "Чердак", "Лабиринт", "Зеркало", "Маска", "Лицо", "Глаза", "Зубы", "Когти", "Кость", "Кровь", "Плоть", "Кожа", "Волосы", "Нерв", "Мозг", "Сердце", "Легкие", "Почка", "Печень", "Желудок", "Кишечник", "Язва", "Нарыв", "Свищ", "Грыжа", "Отек", "Тромб", "Инфаркт", "Инсульт", "Рак", "Диагноз", "Рецидив", "Клиника", "Палата", "Изолятор", "Смирительная", "Лоботомия", "Электрошок", "Препарат", "Доза", "Яд", "Ртуть", "Кислота", "Щелочь", "Радиация", "Изотоп", "Мутант", "Гибрид", "Клон", "Орган", "Донор", "Трансплантат", "Имплант", "Протез", "Сенсор", "Чип", "Провод", "Ток", "Разряд", "Импульс", "Сигнал", "Шум", "Помеха", "Глюк", "Ошибка", "Сбой", "Отказ", "Крах", "Коллапс", "Взрыв", "Пламя", "Дым", "Газ", "Пыль", "Грязь", "Мусор", "Отходы", "Стоки", "Канализация", "Крыса", "Насекомое", "Паук", "Клещ", "Червь", "Пиявка", "Оса", "Рой", "Улей", "Гнездо", "Нора", "Ловушка", "Капкан", "Петля", "Узел", "Верёвка", "Нож", "Бритва", "Шило", "Топор", "Молот", "Гвоздь"];
         const MASTER_WORDS_EN = ["Rot", "Trepanation", "Metastasis", "Necrosis", "Seizure", "Asphyxia", "Decay", "Parasite", "Injection", "Toxin", "Gangrene", "Mold", "Tumor", "Larva", "Torture", "Amputation", "Vomit", "Scar", "Pus", "Corpse", "Coma", "Phantom", "Fracture", "Virus", "Spasm", "Madness", "Cadaver", "Slime", "Mutation", "Agony", "Blindness", "Suffocation", "Sepsis", "Amnesia", "Psychosis", "Phobia", "Cannibal", "Morgue", "Noose", "Abyss", "Void", "Erosion", "Trauma", "Schizophrenia", "Paralysis", "Neurosis", "Nightmare", "Panic", "Tremor", "Fainting", "Infection", "Blight", "Burn", "Hallucination", "Stigmata", "Ritual", "Sacrifice", "Altar", "Curse", "Demon", "Gloom", "Shadow", "Possession", "Whisper", "Grind", "Scream", "Death", "Burial", "Grave", "Crypt", "Shroud", "Ash", "Horror", "Fear", "Pain", "Despair", "Wrath", "Vice", "Sin", "Guilt", "Hangman", "Vise", "Needle", "Scalpel", "Saw", "Hook", "Chain", "Cage", "Cellar", "Attic", "Maze", "Mirror", "Mask", "Face", "Eyes", "Teeth", "Claws", "Bone", "Blood", "Flesh", "Skin", "Hair", "Nerve", "Brain", "Heart", "Lungs", "Kidney", "Liver", "Stomach", "Intestine", "Ulcer", "Abscess", "Fistula", "Hernia", "Edema", "Thrombus", "Infarction", "Stroke", "Cancer", "Diagnosis", "Relapse", "Clinic", "Ward", "Isolator", "Straitjacket", "Lobotomy", "Electroshock", "Drug", "Dose", "Poison", "Mercury", "Acid", "Alkali", "Radiation", "Isotope", "Mutant", "Hybrid", "Clone", "Organ", "Donor", "Transplant", "Implant", "Prosthesis", "Sensor", "Chip", "Wire", "Current", "Discharge", "Impulse", "Signal", "Noise", "Glitch", "Error", "Fault", "Crash", "Collapse", "Explosion", "Flame", "Smoke", "Gas", "Dust", "Dirt", "Waste", "Sewage", "Rat", "Insect", "Spider", "Tick", "Worm", "Leech", "Wasp", "Swarm", "Hive", "Nest", "Burrow", "Trap", "Snare", "Knot", "Rope", "Knife", "Razor", "Awl", "Axe", "Hammer", "Nail"];
 
+        // --- АУДИО ДВИЖОК ---
         const TerminalAudio = {
-            ctx: null, masterGain: null, ambientStarted: false, pulseRate: 1800,
+            ctx: null, masterGain: null, ambientStarted: false, pulseRate: 1800, currentGain: 0.4,
             init() { 
                 if (this.ctx) return; 
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
                 this.masterGain = this.ctx.createGain(); 
                 this.masterGain.connect(this.ctx.destination); 
-                this.masterGain.gain.value = 0.15;
+                this.masterGain.gain.value = 0.6;
                 this.startAmbient();
             },
             
@@ -133,7 +134,7 @@
                 const filter = this.ctx.createBiquadFilter();
                 drone.type = 'sawtooth'; drone.frequency.value = 43.65;
                 filter.type = 'lowpass'; filter.frequency.value = 60;
-                dGain.gain.value = 0.07;
+                dGain.gain.value = 0.15;
                 drone.connect(filter); filter.connect(dGain); dGain.connect(this.masterGain);
                 drone.start();
                 this.playHeart();
@@ -146,100 +147,65 @@
                     const osc = this.ctx.createOscillator();
                     const g = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(i === 0 ? 55 : 48, now + delay);
-                    osc.frequency.exponentialRampToValueAtTime(0.01, now + delay + 0.4);
+                    osc.frequency.setValueAtTime(i === 0 ? 58 : 50, now + delay);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, now + delay + 0.5);
+                    const vol = i === 0 ? this.currentGain : this.currentGain * 0.7;
                     g.gain.setValueAtTime(0, now + delay);
-                    g.gain.linearRampToValueAtTime(i === 0 ? 0.75 : 0.55, now + delay + 0.05);
-                    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.4);
+                    g.gain.linearRampToValueAtTime(vol, now + delay + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.45);
                     osc.connect(g); g.connect(this.masterGain);
                     osc.start(now + delay); osc.stop(now + delay + 0.5);
                 });
-                // Цикл сердцебиения с использованием текущего pulseRate
                 setTimeout(() => this.playHeart(), this.pulseRate);
             },
 
+            updatePulse(occupancy) {
+                this.pulseRate = Math.max(400, 1800 - (occupancy * 60));
+                this.currentGain = 0.4 + (occupancy * 0.024);
+            },
+
             startDeepAmbient() {
-                // Слой 1: шум помех — буфер белого шума через узкополосный фильтр
                 const bufferSize = this.ctx.sampleRate * 3;
                 const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const data = noiseBuffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
                 const noiseSource = this.ctx.createBufferSource();
                 noiseSource.buffer = noiseBuffer;
                 noiseSource.loop = true;
-
                 const noiseFilter = this.ctx.createBiquadFilter();
                 noiseFilter.type = 'bandpass';
                 noiseFilter.frequency.value = 300;
                 noiseFilter.Q.value = 0.4;
-
                 const noiseGain = this.ctx.createGain();
-                noiseGain.gain.value = 0.02;
-
+                noiseGain.gain.value = 0.03;
                 noiseSource.connect(noiseFilter);
                 noiseFilter.connect(noiseGain);
                 noiseGain.connect(this.masterGain);
                 noiseSource.start();
-
-                // Медленная модуляция фильтра шума (жуткое дыхание)
                 const lfoNoise = this.ctx.createOscillator();
                 const lfoNoiseGain = this.ctx.createGain();
-                lfoNoise.type = 'sine';
-                lfoNoise.frequency.value = 0.07;
+                lfoNoise.type = 'sine'; lfoNoise.frequency.value = 0.07;
                 lfoNoiseGain.gain.value = 200;
-                lfoNoise.connect(lfoNoiseGain);
-                lfoNoiseGain.connect(noiseFilter.frequency);
+                lfoNoise.connect(lfoNoiseGain); lfoNoiseGain.connect(noiseFilter.frequency);
                 lfoNoise.start();
-
-                // Слой 2: высокочастотный призвук — тихий шиммер
-                const shimmerOsc = this.ctx.createOscillator();
-                const shimmerGain = this.ctx.createGain();
-                shimmerOsc.type = 'sine';
-                shimmerOsc.frequency.value = 2847;
-                shimmerGain.gain.value = 0.008;
-
-                const lfoShimmer = this.ctx.createOscillator();
-                const lfoShimmerGain = this.ctx.createGain();
-                lfoShimmer.type = 'sine';
-                lfoShimmer.frequency.value = 0.13;
-                lfoShimmerGain.gain.value = 0.015;
-                lfoShimmer.connect(lfoShimmerGain);
-                lfoShimmerGain.connect(shimmerGain.gain);
-                lfoShimmer.start();
-
-                shimmerOsc.connect(shimmerGain);
-                shimmerGain.connect(this.masterGain);
-                shimmerOsc.start();
-
-                // Слой 3: редкие тихие «гудки» терминала
                 this.scheduleTerminalBeep();
             },
 
             scheduleTerminalBeep() {
-                const delay = 8000 + Math.random() * 18000; // каждые 8–26 секунд
+                const delay = 8000 + Math.random() * 18000;
                 setTimeout(() => {
                     if (!this.ctx) return;
                     const now = this.ctx.currentTime;
                     const osc = this.ctx.createOscillator();
                     const g = this.ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = 440 + Math.random() * 320;
+                    osc.type = 'sine'; osc.frequency.value = 440 + Math.random() * 320;
                     g.gain.setValueAtTime(0, now);
-                    g.gain.linearRampToValueAtTime(0.018, now + 0.08);
-                    g.gain.setValueAtTime(0.018, now + 0.18);
+                    g.gain.linearRampToValueAtTime(0.02, now + 0.08);
                     g.gain.linearRampToValueAtTime(0, now + 0.35);
-                    osc.connect(g);
-                    g.connect(this.masterGain);
-                    osc.start(now);
-                    osc.stop(now + 0.4);
+                    osc.connect(g); g.connect(this.masterGain);
+                    osc.start(now); osc.stop(now + 0.4);
                     this.scheduleTerminalBeep();
                 }, delay);
-            },
-
-            updatePulse(occupancy) {
-                // occupancy от 0 до 25. Базовый темп 1800мс, быстрый 500мс.
-                this.pulseRate = Math.max(500, 1800 - (occupancy * 50));
             },
 
             playTvOff() {
@@ -250,25 +216,17 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(14000, now + 0.3);
-                g.gain.setValueAtTime(0.3, now);
+                g.gain.setValueAtTime(0.5, now);
                 g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
                 osc.connect(g); g.connect(this.masterGain);
                 osc.start(); osc.stop(now + 0.35);
-                
-                const click = this.ctx.createOscillator();
-                const cg = this.ctx.createGain();
-                click.type = 'square'; click.frequency.value = 60;
-                cg.gain.setValueAtTime(0.2, now);
-                cg.gain.linearRampToValueAtTime(0, now + 0.05);
-                click.connect(cg); cg.connect(this.masterGain);
-                click.start(); click.stop(now + 0.05);
             },
 
             playDataBurst() { 
                 if(!this.ctx) return; 
                 const o = this.ctx.createOscillator(); const g = this.ctx.createGain(); 
                 o.type = 'sawtooth'; o.frequency.value = 800; 
-                g.gain.setValueAtTime(0.01, this.ctx.currentTime); 
+                g.gain.setValueAtTime(0.04, this.ctx.currentTime); 
                 g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.05); 
                 o.connect(g); g.connect(this.masterGain); o.start(); o.stop(this.ctx.currentTime + 0.05); 
             },
@@ -277,12 +235,13 @@
                 if(!this.ctx) return; 
                 const o = this.ctx.createOscillator(); const g = this.ctx.createGain(); 
                 o.type = 'square'; o.frequency.value = 60; 
-                g.gain.setValueAtTime(0.05, this.ctx.currentTime); 
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime); 
                 g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3); 
                 o.connect(g); g.connect(this.masterGain); o.start(); o.stop(this.ctx.currentTime + 0.3); 
             }
         };
 
+        // --- ИГРОВАЯ ЛОГИКА ---
         const firebaseConfig = { apiKey: "AIzaSyCE7WDfmIi5sMGpZpfLSi5vjpL7Mn2aLtA", authDomain: "fidelity-18c8a.firebaseapp.com", databaseURL: "https://fidelity-18c8a-default-rtdb.europe-west1.firebasedatabase.app", projectId: "fidelity-18c8a" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -294,23 +253,18 @@
         };
 
         function switchScreen(s) { document.querySelectorAll('.screen').forEach(el => el.classList.remove('active')); document.getElementById(s).classList.add('active'); }
-
         function renderInstructions() {
             document.getElementById('tProt').innerText = TEXTS[lang].protocol;
             document.getElementById('tInstr').innerHTML = TEXTS[lang].instr;
             document.getElementById('tWarnLabel').innerText = TEXTS[lang].warnLabel;
             document.getElementById('tWarnText').innerText = TEXTS[lang].warn;
         }
-        
         function toggleLanguage() { 
             lang = lang === 'ru' ? 'en' : 'ru'; 
             document.querySelectorAll('[data-t]').forEach(el => el.innerHTML = TEXTS[lang][el.getAttribute('data-t')] || el.innerText); 
-            document.getElementById('tProt').innerText = TEXTS[lang].protocol;
-            document.getElementById('tInstr').innerHTML = TEXTS[lang].instr; 
             renderInstructions();
             if(gState) { drawGrid(); updateUI(); }
         }
-
         function copyId() { navigator.clipboard.writeText(gId); const chip = document.getElementById('copyBtn'); chip.innerText = "DONE"; setTimeout(() => chip.innerText = "COPY", 1000); }
 
         function openNickPrompt(mode) {
@@ -374,11 +328,8 @@
             db.ref('games/' + gId).on('value', s => {
                 gState = s.val(); if(!gState) return; sessionWords = gState.words; 
                 document.getElementById('displayOpponent').innerText = pNum === 1 ? (gState.p2Nick || "WAITING...") : gState.p1Nick;
-                
-                // Считаем заполненность поля для пульса
                 const occupiedCount = gState.board.filter(v => v !== 0).length;
                 TerminalAudio.updatePulse(occupiedCount);
-                
                 drawGrid(); updateUI();
                 if(gState.winner) showEnd(gState.winner === pNum);
             });
@@ -396,16 +347,17 @@
             if(gState.turn !== pNum || !gState.roll || gState.board[i] !== 0) return;
             if(gState.roll !== 6 && (i % 5) !== (gState.roll - 1)) return;
             TerminalAudio.playDataBurst();
-            gState.board[i] = pNum; gState.roll = 0;
-            if(checkWin(gState.board)) gState.winner = pNum;
-            else gState.turn = isBotMode ? 2 : (pNum === 1 ? 2 : 1);
+            gState.board[i] = pNum;
+            gState.roll = 0;
+            if(checkWin(gState.board)) { gState.winner = pNum; } 
+            else { gState.turn = isBotMode ? 2 : (pNum === 1 ? 2 : 1); }
             if(isBotMode) { 
                 const count = gState.board.filter(v => v !== 0).length;
                 TerminalAudio.updatePulse(count);
                 drawGrid(); updateUI();
                 if(gState.winner) { showEnd(gState.winner === pNum); return; }
                 if(gState.turn === 2) setTimeout(botMove, 600); 
-            } else { db.ref('games/' + gId).update(gState); }
+            } else { db.ref('games/' + gId).set(gState); }
         }
 
         function botMove() { if(!isBotMode || gState.winner || gState.turn !== 2) return; triggerRoll(); }
@@ -425,15 +377,18 @@
             }
             if(checkWin(gState.board)) gState.winner = 2;
             else { gState.turn = 1; gState.roll = 0; }
+            const count = gState.board.filter(v => v !== 0).length;
+            TerminalAudio.updatePulse(count);
             drawGrid(); updateUI();
             if(gState.winner) showEnd(gState.winner === pNum);
         }
 
         function checkWin(b) {
-            const wins = [[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24], [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24], [0,6,12,18,24],[4,8,12,16,20]];
-            return wins.some(w => {
-                const vals = w.map(idx => b[idx]);
-                return (vals.every(v => v === 1) || vals.every(v => v === 2));
+            const wins = [[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],[0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],[0,6,12,18,24],[4,8,12,16,20]];
+            return wins.some(line => {
+                const first = b[line[0]];
+                if (first === 0 || first === 3) return false;
+                return line.every(idx => b[idx] === first);
             });
         }
 
