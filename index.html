@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL 666 | ONLINE</title>
+    <title>TERMINAL 666 | FINAL PROTOCOL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
 
-        :root { --blood: #8a0303; --neon: #0af; --dark: #050000; }
+        :root { --blood: #8a0303; --neon: #0af; --dark: #050000; --panel: rgba(15, 0, 0, 0.9); }
 
         * { box-sizing: border-box; cursor: crosshair; user-select: none; }
         body, html { margin: 0; padding: 0; background: var(--dark); color: #b0a090; font-family: 'Share Tech Mono', monospace; height: 100%; overflow: hidden; }
@@ -23,21 +23,20 @@
             animation: moveScan 8s linear infinite; pointer-events: none; z-index: 1001; }
         @keyframes moveScan { from { top: -100px; } to { top: 100%; } }
 
-        .glitch-noise { position: fixed; inset: 0; opacity: 0.03; pointer-events: none; z-index: 999;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAt6pY6AAAAB3RSTlMAAAAAAAAAb6IsjAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAClJREFUeF7twQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAAAAAAAADuBh8AAfS8868AAAAASUVORK5CYII='); }
-
         /* SCREENS */
         .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 10; position: relative; }
         .screen.active { display: flex; }
 
-        .logo { font-family: 'Bebas Neue'; font-size: clamp(70px, 18vw, 120px); color: var(--blood); text-shadow: 0 0 20px var(--blood); line-height: 0.8; text-align: center; margin-bottom: 40px; animation: glitchText 3s infinite; }
-        @keyframes glitchText { 0% { transform: skew(0deg); } 2% { transform: skew(10deg); color: var(--neon); } 4% { transform: skew(-10deg); } 5% { transform: skew(0deg); color: var(--blood); } }
+        .logo { font-family: 'Bebas Neue'; font-size: clamp(60px, 15vw, 100px); color: var(--blood); text-shadow: 0 0 20px var(--blood); line-height: 0.8; text-align: center; margin-bottom: 20px; animation: flicker 0.15s infinite alternate; }
+        @keyframes flicker { 0% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        .btn { font-family: 'Bebas Neue'; font-size: 26px; background: #1a0000; border: 2px solid var(--blood); color: var(--blood); padding: 15px; width: 100%; max-width: 320px; margin: 10px; transition: 0.2s; letter-spacing: 3px; position: relative; }
-        .btn:hover:not(:disabled) { background: var(--blood); color: #fff; box-shadow: 0 0 30px var(--blood); transform: scale(1.02); }
+        .btn { font-family: 'Bebas Neue'; font-size: 26px; background: #1a0000; border: 2px solid var(--blood); color: var(--blood); padding: 15px; width: 100%; max-width: 320px; margin: 10px; transition: 0.2s; letter-spacing: 3px; position: relative; z-index: 20; }
+        .btn:hover:not(:disabled) { background: var(--blood); color: #fff; box-shadow: 0 0 30px var(--blood); }
         .btn:disabled { opacity: 0.1; filter: grayscale(1); }
 
-        .lang-switch { position: fixed; top: 20px; right: 20px; z-index: 2000; border: 1px solid #444; background: #000; color: var(--neon); padding: 5px 12px; font-size: 14px; }
+        /* ЛОББИ ИНСТРУКЦИЯ */
+        .lobby-warning { max-width: 400px; border: 1px solid #300; padding: 15px; margin-top: 20px; font-size: 11px; color: #555; text-align: left; background: rgba(5,0,0,0.8); }
+        .lobby-warning b { color: var(--blood); display: block; margin-bottom: 5px; }
 
         /* GAMEPLAY */
         .game-grid-container { display: flex; gap: 30px; width: 100%; max-width: 1000px; justify-content: center; align-items: flex-start; }
@@ -47,23 +46,27 @@
         .cell.p2 { background: #004; color: #fff; box-shadow: inset 0 0 15px #000; border-color: var(--neon); }
         .cell.free { color: var(--blood); border: 1px dashed var(--blood); font-weight: bold; }
 
-        .panel { background: rgba(15, 0, 0, 0.9); border: 1px solid #400; padding: 20px; width: 300px; font-size: 14px; border-left: 4px solid var(--blood); }
+        .panel { background: var(--panel); border: 1px solid #400; padding: 20px; width: 300px; font-size: 14px; border-left: 4px solid var(--blood); box-shadow: 10px 10px 30px rgba(0,0,0,0.5); }
         #rollVal { width: 70px; height: 70px; border: 2px solid var(--blood); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 40px; color: #f00; background: #000; margin-left: 10px; }
 
-        input { background: #000; border: 1px solid #400; color: var(--neon); padding: 18px; width: 320px; text-align: center; font-size: 24px; font-family: inherit; outline: none; margin-bottom: 20px; }
+        /* END SCREENS */
+        #endScreen { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .end-title { font-family: 'Bebas Neue'; font-size: 12vw; line-height: 0.8; margin-bottom: 20px; }
+        .end-msg { font-family: 'Special Elite'; font-size: 18px; color: #555; max-width: 500px; }
 
-        @media (max-width: 850px) {
-            .game-grid-container { flex-direction: column; align-items: center; }
-            .panel { width: 100%; order: 2; }
-            .grid { max-width: 380px; }
-        }
+        /* DECOR */
+        .creepy-text { position: fixed; font-size: 10px; color: #200; pointer-events: none; opacity: 0.5; z-index: 1; }
+        .lang-switch { position: fixed; top: 20px; right: 20px; z-index: 2000; border: 1px solid #444; background: #000; color: var(--neon); padding: 5px 12px; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="crt-overlay"></div>
     <div class="scanline"></div>
-    <div class="glitch-noise"></div>
+    
+    <div class="creepy-text" style="top: 10%; left: 5%;">SYSTEM_FAILURE_LOG</div>
+    <div class="creepy-text" style="bottom: 10%; right: 5%;">THEY_ARE_WATCHING</div>
+    <div class="creepy-text" style="top: 50%; left: 2%;">DO NOT TRUST THE TERMINAL</div>
 
     <button class="lang-switch" onclick="toggleLanguage()">RU / EN</button>
 
@@ -71,10 +74,20 @@
         <div class="logo">VOID<br>TERMINAL</div>
         <button class="btn" onclick="startHost()" data-t="create">СОЗДАТЬ ЛОББИ</button>
         <button class="btn" onclick="switchScreen('scrJoin')" data-t="join">ПОДКЛЮЧИТЬСЯ</button>
+        
+        <div class="lobby-warning" id="lobbyRules">
+            <b data-t="prot">ПРОТОКОЛ БЕЗОПАСНОСТИ:</b>
+            <span data-t="rules">
+                • Не закрывайте окно до завершения сеанса.<br>
+                • Ваша жизнь зависит от случайных чисел.<br>
+                • Пять отметок в ряд гарантируют выживание.<br>
+                • Вторая сторона — не человек.
+            </span>
+        </div>
     </div>
 
     <div id="scrJoin" class="screen">
-        <input type="text" id="joinInput" placeholder="ID...">
+        <input type="text" id="joinInput" placeholder="ID..." style="background:#000; border:1px solid #500; color:var(--neon); padding:18px; width:320px; text-align:center; font-size:24px; font-family:inherit; outline:none; margin-bottom:20px;">
         <button class="btn" onclick="startJoin()" data-t="start">ВОЙТИ В ПОТОК</button>
         <button class="btn" style="border:none; color:#444" onclick="switchScreen('scrMenu')" data-t="back">ОТМЕНА</button>
     </div>
@@ -83,19 +96,14 @@
         <div class="game-grid-container">
             <div class="panel">
                 <div id="displayId" style="color: var(--neon); font-size: 18px; margin-bottom: 10px;">ID: ...</div>
+                <div style="font-size: 10px; color: #444; margin-bottom: 10px;">LATENCY: 14ms</div>
                 <hr style="border:0; border-top:1px solid #311; margin: 15px 0;">
-                <b id="tProt" style="color:var(--blood)">ПРОТОКОЛ:</b>
-                <div id="tInstr" style="color:#777; margin-top:10px; line-height:1.5; font-size:13px;">
-                    1. Нажми КУРОК.<br>
-                    2. Выпавшая цифра - твоя колонка.<br>
-                    3. Займи клетку в этой колонке.<br>
-                    4. Цифра 6 - свободный выбор.<br>
-                    5. Собери 5 в ряд.
-                </div>
+                <b id="tProt" style="color:var(--blood)">ИНСТРУКЦИИ:</b>
+                <div id="tInstr" style="color:#777; margin-top:10px; line-height:1.5; font-size:13px;"></div>
             </div>
 
             <div style="display:flex; flex-direction:column; align-items:center;">
-                <div id="gameStatus" style="color: #f00; margin-bottom: 15px; font-family:'Special Elite'; height: 20px;"></div>
+                <div id="gameStatus" style="color: #f00; margin-bottom: 15px; font-family:'Special Elite'; height: 20px; text-transform: uppercase;"></div>
                 <div style="display:flex; margin-bottom:15px; width:100%;">
                     <button class="btn" id="rollBtn" style="margin:0; flex:1;" onclick="triggerRoll()" data-t="roll">КУРОК</button>
                     <div id="rollVal">—</div>
@@ -103,6 +111,12 @@
                 <div class="grid" id="mainGrid"></div>
             </div>
         </div>
+    </div>
+
+    <div id="endScreen">
+        <div id="endTitle" class="end-title">ERASED</div>
+        <div id="endMsg" class="end-msg"></div>
+        <button class="btn" onclick="location.reload()" style="margin-top: 50px;">RECONNECT</button>
     </div>
 
     <script>
@@ -125,17 +139,29 @@
         let lang = 'ru';
 
         const TEXTS = {
-            ru: { create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ В ПОТОК", back:"ОТМЕНА", roll:"КУРОК", wait:"ОЖИДАНИЕ СУБЪЕКТА...", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", win:"ВЫ ВЫЖИЛИ", lose:"ВЫ СТЕРТЫ", prot:"ПРОТОКОЛ:", instr: "1. Нажми КУРОК (бросок).<br>2. Выпавшая цифра - твоя колонка.<br>3. Займи клетку в этой колонке.<br>4. Цифра 6 - свободный выбор.<br>5. Собери 5 в ряд." },
-            en: { create:"CREATE LOBBY", join:"CONNECT", start:"ENTER FLOW", back:"CANCEL", roll:"TRIGGER", wait:"AWAITING SUBJECT...", your:"YOUR TURN", enemy:"ENEMY AIMING...", win:"YOU SURVIVED", lose:"YOU ARE ERASED", prot:"PROTOCOL:", instr: "1. Press TRIGGER (roll).<br>2. The number is your column.<br>3. Occupy a cell in that column.<br>4. Number 6 is a free choice.<br>5. Get 5 in a row." }
+            ru: { 
+                create:"СОЗДАТЬ ЛОББИ", join:"ПОДКЛЮЧИТЬСЯ", start:"ВОЙТИ В ПОТОК", back:"ОТМЕНА", roll:"КУРОК", wait:"ОЖИДАНИЕ СУБЪЕКТА...", your:"ТВОЙ ХОД", enemy:"ВРАГ ЦЕЛИТСЯ...", 
+                winT:"ВЫЖИЛ", winM:"Объект 01 стабилизирован. Протокол очистки завершен успешно.", 
+                loseT:"СТЕРТ", loseM:"Субъект признан непригодным. Утилизация завершена. Связь разорвана.",
+                prot:"ПРОТОКОЛ:", rules: "• Не закрывайте окно до завершения сеанса.<br>• Ваша жизнь зависит от случайных чисел.<br>• Пять отметок в ряд гарантируют выживание.<br>• Вторая сторона — не человек.",
+                instr: "1. Нажми КУРОК.<br>2. Цифра — твоя колонка.<br>3. Займи клетку в ней.<br>4. Цифра 6 — любой сектор." 
+            },
+            en: { 
+                create:"CREATE LOBBY", join:"CONNECT", start:"ENTER FLOW", back:"CANCEL", roll:"TRIGGER", wait:"AWAITING SUBJECT...", your:"YOUR TURN", enemy:"ENEMY AIMING...", 
+                winT:"STABLE", winM:"Object 01 stabilized. Cleanup protocol finished successfully.", 
+                loseT:"ERASED", loseM:"Subject found unsuitable. Disposal complete. Link severed.",
+                prot:"PROTOCOL:", rules: "• Do not close window during session.<br>• Your life depends on random numbers.<br>• Five marks in a row ensure survival.<br>• The other side is not human.",
+                instr: "1. Pull the TRIGGER.<br>2. Number is your column.<br>3. Occupy a cell there.<br>4. Number 6 is free choice." 
+            }
         };
 
         const DICTIONARY = ["БОЛЬ", "УЖАС", "ТЛЕН", "МОРГ", "ЯД", "БРЕД", "АГОНИЯ", "МРАК", "СТРАХ", "ПЫТКИ", "КРОВЬ", "КРИК", "ТЬМА", "ХАОС", "ГНИЛЬ", "СМЕРТЬ", "ПУСТОТА", "БЕЗДНА", "ШРАМ", "ГРЕХ", "ПЕТЛЯ", "ЗЛО", "РОК", "ГРОБ", "ТЕНЬ"];
 
         function toggleLanguage() {
             lang = lang === 'ru' ? 'en' : 'ru';
-            document.querySelectorAll('[data-t]').forEach(el => el.innerText = TEXTS[lang][el.getAttribute('data-t')]);
-            document.getElementById('tProt').innerText = TEXTS[lang].prot;
+            document.querySelectorAll('[data-t]').forEach(el => el.innerHTML = TEXTS[lang][el.getAttribute('data-t')] || el.innerText);
             document.getElementById('tInstr').innerHTML = TEXTS[lang].instr;
+            document.getElementById('tProt').innerText = TEXTS[lang].prot;
             if(gState) updateInterface();
         }
 
@@ -148,7 +174,7 @@
             gId = Math.random().toString(36).substring(2, 7).toUpperCase();
             pNum = 1;
             const data = { board: Array(25).fill(0), turn: 1, roll: 0, players: 1, winner: 0 };
-            data.board[12] = 3; // FREE
+            data.board[12] = 3;
             db.ref('games/' + gId).set(data).then(listen);
         }
 
@@ -166,17 +192,15 @@
 
         function listen() {
             switchScreen('scrGame');
-            document.getElementById('displayId').innerText = "ID: " + gId;
+            document.getElementById('displayId').innerText = "SESSION: " + gId;
+            document.getElementById('tInstr').innerHTML = TEXTS[lang].instr;
             db.ref('games/' + gId).on('value', s => {
                 gState = s.val();
                 if(!gState) return;
                 drawGrid();
                 updateInterface();
                 if(gState.winner && gState.winner !== 0) {
-                    setTimeout(() => {
-                        alert(gState.winner === pNum ? TEXTS[lang].win : TEXTS[lang].lose);
-                        location.reload();
-                    }, 400);
+                    showEnd(gState.winner === pNum);
                 }
             });
         }
@@ -233,6 +257,21 @@
                 cell.onclick = () => occupy(i);
                 g.appendChild(cell);
             });
+        }
+
+        function showEnd(isWin) {
+            const endScreen = document.getElementById('endScreen');
+            const title = document.getElementById('endTitle');
+            const msg = document.getElementById('endMsg');
+
+            title.innerText = isWin ? TEXTS[lang].winT : TEXTS[lang].loseT;
+            title.style.color = isWin ? var(--neon) : var(--blood);
+            title.style.textShadow = isWin ? "0 0 20px #0af" : "0 0 20px #f00";
+            msg.innerText = isWin ? TEXTS[lang].winM : TEXTS[lang].loseM;
+            
+            endScreen.style.display = 'flex';
+            // Очистка базы через 2 секунды
+            setTimeout(() => db.ref('games/' + gId).remove(), 2000);
         }
     </script>
 </body>
