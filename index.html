@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOID TERMINAL | RECONSTRUCTED</title>
+    <title>VOID TERMINAL | ULTIMATE FIX</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -252,14 +252,6 @@
                 g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
                 osc.connect(g); g.connect(this.masterGain);
                 osc.start(); osc.stop(now + 0.35);
-                
-                const click = this.ctx.createOscillator();
-                const cg = this.ctx.createGain();
-                click.type = 'square'; click.frequency.value = 60;
-                cg.gain.setValueAtTime(0.2, now);
-                cg.gain.linearRampToValueAtTime(0, now + 0.05);
-                click.connect(cg); cg.connect(this.masterGain);
-                click.start(); click.stop(now + 0.05);
             },
 
             playDataBurst() { 
@@ -361,7 +353,7 @@
 
         function startJoin(id) {
             if(!id) return; gId = id.toUpperCase(); pNum = 2;
-            db.ref('games/' + gId).once('value', s => { 
+            db.ref('games/' + id.toUpperCase()).once('value', s => { 
                 if(s.exists()){ db.ref('games/' + gId).update({ players: 2, p2Nick: myNick }); listen(); } 
             });
         }
@@ -381,6 +373,7 @@
         }
 
         function triggerRoll() {
+            if (gState.winner) return;
             TerminalAudio.playStatic(); const r = Math.floor(Math.random() * 6) + 1;
             if(isBotMode) { 
                 gState.roll = r; updateUI(); drawGrid();
@@ -389,19 +382,26 @@
         }
 
         function occupy(i) {
-            if(gState.turn !== pNum || !gState.roll || gState.board[i] !== 0) return;
+            if(gState.winner || gState.turn !== pNum || !gState.roll || gState.board[i] !== 0) return;
             if(gState.roll !== 6 && (i % 5) !== (gState.roll - 1)) return;
             TerminalAudio.playDataBurst();
             gState.board[i] = pNum; gState.roll = 0;
             
-            if(checkWin(gState.board)) gState.winner = pNum;
-            else gState.turn = isBotMode ? 2 : (pNum === 1 ? 2 : 1);
+            const count = gState.board.filter(v => v !== 0).length;
+            TerminalAudio.updatePulse(count);
+
+            if(checkWin(gState.board)) {
+                gState.winner = pNum;
+                drawGrid(); updateUI();
+                showEnd(true);
+                if(!isBotMode) db.ref('games/' + gId).update(gState);
+                return;
+            }
+            
+            gState.turn = isBotMode ? 2 : (pNum === 1 ? 2 : 1);
             
             if(isBotMode) { 
-                const count = gState.board.filter(v => v !== 0).length;
-                TerminalAudio.updatePulse(count);
                 drawGrid(); updateUI();
-                if(gState.winner) { showEnd(gState.winner === pNum); return; }
                 if(gState.turn === 2) setTimeout(botMove, 600); 
             } else { db.ref('games/' + gId).update(gState); }
         }
@@ -409,6 +409,7 @@
         function botMove() { if(!isBotMode || gState.winner || gState.turn !== 2) return; triggerRoll(); }
 
         function botDecision() {
+            if (gState.winner) return;
             let moves = [];
             gState.board.forEach((v, idx) => { if(v === 0 && (gState.roll === 6 || (idx % 5 === gState.roll - 1))) moves.push(idx); });
             if(moves.length > 0) {
@@ -421,10 +422,21 @@
                 });
                 gState.board[best] = 2; TerminalAudio.playDataBurst();
             }
-            if(checkWin(gState.board)) gState.winner = 2;
-            else { gState.turn = 1; gState.roll = 0; }
+
+            const count = gState.board.filter(v => v !== 0).length;
+            TerminalAudio.updatePulse(count);
+
+            if(checkWin(gState.board)) {
+                gState.winner = 2;
+                gState.roll = 0;
+                drawGrid(); updateUI();
+                showEnd(false);
+                return;
+            }
+            
+            gState.turn = 1; 
+            gState.roll = 0;
             drawGrid(); updateUI();
-            if(gState.winner) showEnd(gState.winner === pNum);
         }
 
         function checkWin(b) {
@@ -450,20 +462,20 @@
             gState.board.forEach((v, i) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell' + (v===1?' p1':v===2?' p2':v===3?' system':'');
-                if (gState.turn === pNum && gState.roll !== 0 && v === 0) {
+                if (gState.turn === pNum && gState.roll !== 0 && v === 0 && !gState.winner) {
                     if (gState.roll === 6 || (i % 5 === gState.roll - 1)) {
                         cell.style.borderColor = '#fff'; cell.style.boxShadow = 'inset 0 0 8px rgba(255,255,255,0.3)';
                     }
                 }
                 cell.innerText = v === 3 ? TEXTS[lang].system : sessionWords[i];
-                if(v === 0) cell.onclick = () => occupy(i); g.appendChild(cell);
+                if(v === 0 && !gState.winner) cell.onclick = () => occupy(i); g.appendChild(cell);
             });
         }
 
         function updateUI() {
             const isMy = gState.turn === pNum;
-            document.getElementById('gameStatus').innerText = isBotMode && gState.turn === 2 ? TEXTS[lang].botTurn : (isMy ? TEXTS[lang].your : TEXTS[lang].enemy);
-            document.getElementById('rollBtn').disabled = !isMy || gState.roll !== 0 || (gState.players < 2 && !isBotMode);
+            document.getElementById('gameStatus').innerText = gState.winner ? "" : (isBotMode && gState.turn === 2 ? TEXTS[lang].botTurn : (isMy ? TEXTS[lang].your : TEXTS[lang].enemy));
+            document.getElementById('rollBtn').disabled = !isMy || gState.roll !== 0 || (gState.players < 2 && !isBotMode) || gState.winner;
             document.getElementById('rollVal').innerText = gState.roll || "—";
         }
 
